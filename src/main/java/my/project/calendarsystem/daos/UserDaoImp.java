@@ -7,6 +7,8 @@ import my.project.calendarsystem.models.User;
 import my.project.calendarsystem.repos.UserRepo;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 public class UserDaoImp implements UserDAO {
@@ -22,5 +24,10 @@ public class UserDaoImp implements UserDAO {
     public User findByEmail(User user)
     {
         return userRepo.findUserByEmail(user.getEmail());
+    }
+
+    @Override
+    public List<User> allUsers() {
+        return userRepo.findAll();
     }
 }

@@ -37,8 +37,9 @@ public class CalendarController {
      * @return
      */
     @GetMapping("/{id}")
-    public ResponseEntity readOne(@PathVariable long id){
-        return new ResponseEntity(calendarService.read(id),HttpStatus.OK);
+    public ResponseEntity readOne(@PathVariable long id,HttpServletRequest request){
+        User user = jwtTokenUtil.getUserId(request.getHeader("Authorization"));
+        return new ResponseEntity(calendarService.read(id,user),HttpStatus.OK);
     }
 
     @GetMapping

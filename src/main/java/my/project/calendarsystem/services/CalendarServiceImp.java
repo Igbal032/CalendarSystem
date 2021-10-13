@@ -3,6 +3,8 @@ package my.project.calendarsystem.services;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import my.project.calendarsystem.daos.interfaces.CalendarDAO;
+import my.project.calendarsystem.daos.interfaces.CalendarForUsersDao;
+import my.project.calendarsystem.daos.interfaces.UserDAO;
 import my.project.calendarsystem.dtos.CalendarDTO;
 import my.project.calendarsystem.enums.Color;
 import my.project.calendarsystem.exceptions.CalendarNotFoundException;
@@ -10,8 +12,11 @@ import my.project.calendarsystem.exceptions.NotAccessException;
 import my.project.calendarsystem.exceptions.NotCorrectDateException;
 import my.project.calendarsystem.exceptions.NotZeroException;
 import my.project.calendarsystem.models.Calendar;
+import my.project.calendarsystem.models.CalendarForUser;
 import my.project.calendarsystem.models.User;
+import my.project.calendarsystem.services.interfaces.CalendarForUsersService;
 import my.project.calendarsystem.services.interfaces.CalendarService;
+import my.project.calendarsystem.services.interfaces.UserService;
 import my.project.calendarsystem.utils.Helper;
 import net.bytebuddy.description.method.MethodDescription;
 import org.modelmapper.ModelMapper;
@@ -31,6 +36,8 @@ public class CalendarServiceImp implements CalendarService {
 
     private final ModelMapper modelMapper;
     private final CalendarDAO calendarDAO;
+    private final CalendarForUsersService calendarForUsersService;
+    private final UserDAO userDAO;
 
     @Value("${app.admin.role}")
     private String adminRole;
@@ -50,6 +57,7 @@ public class CalendarServiceImp implements CalendarService {
                     .notifiedDate(notifiedDate)
                     .build();
             Calendar saved = calendarDAO.save(calendar);
+            createCalendarForAll(calendar);
             CalendarDTO convertToDto = modelMapper.map(saved, CalendarDTO.class);
             return convertToDto;
         }
@@ -57,9 +65,11 @@ public class CalendarServiceImp implements CalendarService {
     }
 
     @Override
-    public CalendarDTO read(long id) {
+    public CalendarDTO read(long id, User user) {
         if (id!=0){
+
             Calendar calendar =  calendarDAO.read(id);
+            calendarForUsersService.read(calendar,user);
             if (calendar==null) throw new CalendarNotFoundException("Calendar not found with this id.");
             return modelMapper.map(calendar,CalendarDTO.class);
         }
@@ -79,8 +89,7 @@ public class CalendarServiceImp implements CalendarService {
     public CalendarDTO update(long Id, CalendarDTO updatedCalendar, User user) {
         if (Id==0) throw new NotZeroException("Id must not be 0");
         Calendar findCalendar = calendarDAO.read(Id);
-        log.error((user.getEmail()!=findCalendar.getUser().getEmail()) + " gorek");
-        if ((user.getRole().equals(adminRole)&&findCalendar.getUser().getRole().equals(adminRole))
+        if (user.getRole().equals(adminRole)==findCalendar.getUser().getRole().equals(adminRole)
                 ||user.getEmail()==findCalendar.getUser().getEmail()){
             if (Helper.checkDate(updatedCalendar.getFromDate(), updatedCalendar.getToDate())) {
                 Calendar calendar = modelMapper.map(updatedCalendar, Calendar.class);
@@ -92,7 +101,7 @@ public class CalendarServiceImp implements CalendarService {
                         .createdDate(findCalendar.getCreatedDate())
                         .timeColor(timeColor.toString())
                         .notifiedDate(notifiedDate)
-                        .user(user)
+                        .user(findCalendar.getUser())
                         .build();
                 Calendar saved = calendarDAO.save(calendar);
                 CalendarDTO convertToDto = modelMapper.map(saved, CalendarDTO.class);
@@ -110,5 +119,12 @@ public class CalendarServiceImp implements CalendarService {
     if (!(user.getRole().equals(adminRole)&&user.getRole().equals(adminRole))
             ||(user.getId()!=findCalendar.getUser().getId())) throw new NotAccessException("Only creator update this event");
     calendarDAO.delete(id);
+    }
+
+    private void createCalendarForAll(Calendar calendar){
+        List<User> allUsers = userDAO.allUsers();
+        allUsers.forEach(u->{
+            calendarForUsersService.create(calendar,u);
+        });
     }
 }
