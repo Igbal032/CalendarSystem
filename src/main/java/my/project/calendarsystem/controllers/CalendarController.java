@@ -1,12 +1,17 @@
 package my.project.calendarsystem.controllers;
 
 import lombok.RequiredArgsConstructor;
+import my.project.calendarsystem.config.JwtTokenUtil;
 import my.project.calendarsystem.dtos.CalendarDTO;
+import my.project.calendarsystem.models.User;
 import my.project.calendarsystem.services.interfaces.CalendarService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
 
 @RestController
 @RequiredArgsConstructor
@@ -14,18 +19,20 @@ import org.springframework.web.bind.annotation.*;
 public class CalendarController {
 
     private final CalendarService calendarService;
+    private final JwtTokenUtil jwtTokenUtil;
 
     /**
      * Method is used for creating new calendar
      * @return
      */
     @PostMapping
-    public ResponseEntity create(@RequestBody CalendarDTO calendarDTO){
-        return new ResponseEntity(calendarService.create(calendarDTO),HttpStatus.OK);
+    public ResponseEntity create(@RequestBody CalendarDTO calendarDTO, HttpServletRequest request){
+        User user = jwtTokenUtil.getUserId(request.getHeader("Authorization"));
+        return new ResponseEntity(calendarService.create(calendarDTO,user),HttpStatus.OK);
     }
 
     /**
-     * This method is used for getting one calendar by id
+     * This method is used for getting calendar by id
      * @PathVariable  calendar-id
      * @return
      */
@@ -40,19 +47,25 @@ public class CalendarController {
     }
 
     /**
-     * This method is used for updating one calendar
+     * This method is used for updating calendar
      * @PathVariable  calendar-id
      * @RequestBody calendarDTO
      * @return
      */
     @PutMapping("/{id}")
-    public ResponseEntity update(@PathVariable long id,@RequestBody CalendarDTO calendarDTO){
-        return new ResponseEntity(calendarService.update(id,calendarDTO),HttpStatus.OK);
+    public ResponseEntity update(@PathVariable long id,@RequestBody CalendarDTO calendarDTO,HttpServletRequest request){
+        User user = jwtTokenUtil.getUserId(request.getHeader("Authorization"));
+        return new ResponseEntity(calendarService.update(id,calendarDTO,user),HttpStatus.OK);
     }
-
+    /**
+     * This method is used for deleting calendar
+     * @PathVariable  calendar-id
+     * @return
+     */
     @DeleteMapping("/{id}")
-    public ResponseEntity delete(@PathVariable long id){
-
+    public ResponseEntity delete(@PathVariable long id,HttpServletRequest request){
+        User user = jwtTokenUtil.getUserId(request.getHeader("Authorization"));
+        calendarService.delete(id,user);
         return new ResponseEntity(HttpStatus.OK);
     }
 }

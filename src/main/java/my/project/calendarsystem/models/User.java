@@ -1,11 +1,11 @@
 package my.project.calendarsystem.models;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "users")
 @Builder(toBuilder = true)
@@ -18,4 +18,6 @@ public class User {
     private String firstName;
     private String lastName;
     private String email;
+    private String password;
+    private String role;
 }

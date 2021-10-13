@@ -2,13 +2,14 @@ package my.project.calendarsystem.services.interfaces;
 
 import my.project.calendarsystem.dtos.CalendarDTO;
 import my.project.calendarsystem.models.Calendar;
+import my.project.calendarsystem.models.User;
 
 import java.util.List;
 
 public interface CalendarService {
-    CalendarDTO create(CalendarDTO newCalendar);
+    CalendarDTO create(CalendarDTO newCalendar, User user);
     CalendarDTO read(long id);
     List<CalendarDTO> readAll();
-    CalendarDTO update(long calendarId, CalendarDTO updatedCalendar);
-    void delete(long id);
+    CalendarDTO update(long calendarId, CalendarDTO updatedCalendar,User user);
+    void delete(long id,User user);
 }

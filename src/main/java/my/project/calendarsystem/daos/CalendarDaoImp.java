@@ -29,4 +29,9 @@ public class CalendarDaoImp implements CalendarDAO {
     public List<Calendar> readAll() {
         return calendarRepo.findAll().stream().filter(w->w.getDeletedDate()==null).collect(Collectors.toList());
     }
+
+    @Override
+    public void delete(long id) {
+        calendarRepo.deleteById(id);
+    }
 }

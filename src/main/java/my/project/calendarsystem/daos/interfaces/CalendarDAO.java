@@ -9,4 +9,5 @@ public interface CalendarDAO {
     Calendar save(Calendar newCalendar);
     Calendar read(long id);
     List<Calendar> readAll();
+    void delete(long id);
 }

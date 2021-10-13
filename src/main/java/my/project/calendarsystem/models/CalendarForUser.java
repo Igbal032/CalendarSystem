@@ -18,4 +18,5 @@ public class CalendarForUser {
     private Calendar calendar;
     @OneToOne
     private User user;
+    private boolean isRead;
 }
