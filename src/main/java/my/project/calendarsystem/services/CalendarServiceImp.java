@@ -18,6 +18,7 @@ import my.project.calendarsystem.services.interfaces.CalendarService;
 import my.project.calendarsystem.utils.Helper;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -98,11 +99,6 @@ public class CalendarServiceImp implements CalendarService {
     public CalendarDTO update(long Id, CalendarDTO updatedCalendar, User user) {
         if (Id==0) throw new NotZeroException("Id must not be 0");
         Calendar findCalendar = calendarDAO.read(Id);
-        System.out.println(findCalendar.getUser().getRole());
-        System.out.println(findCalendar.getUser().getEmail());
-        System.out.println(user.getEmail());
-        System.out.println(user.getRole().equals(adminRole));
-        System.out.println(findCalendar.getUser().getRole().equals(adminRole));
         if (user.getEmail().equals(findCalendar.getUser().getEmail())
                 || user.getRole().equals(adminRole)==true&&findCalendar.getUser().getRole().equals(adminRole)==true){
             if (Helper.checkDate(updatedCalendar.getFromDate(), updatedCalendar.getToDate())) {
@@ -143,5 +139,18 @@ public class CalendarServiceImp implements CalendarService {
         allUsers.forEach(u->{
             calendarForUsersService.create(calendar,u);
         });
+    }
+
+    @Scheduled(fixedRate = 1000)
+    private void setColorTime(){
+        System.out.println("Working");
+        calendarDAO.readAll().stream()
+                .filter(w->w.getDeletedDate()==null)
+                .forEach(c->{
+                    long range = Helper.calRangeBetweenTwoLocalDateTime(c.getFromDate(),LocalDateTime.now());
+                    Color timeColor = Helper.getColorBasedOnDay(range);
+                    c.setTimeColor(timeColor.toString());
+                    calendarDAO.save(c);
+                });
     }
 }
