@@ -16,7 +16,7 @@ public class CalendarDaoImp implements CalendarDAO {
     private final CalendarRepo calendarRepo;
 
     @Override
-    public Calendar create(Calendar newCalendar) {
+    public Calendar save(Calendar newCalendar) {
         return calendarRepo.save(newCalendar);
     }
 

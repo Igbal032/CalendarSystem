@@ -6,7 +6,7 @@ import my.project.calendarsystem.models.Calendar;
 import java.util.List;
 
 public interface CalendarDAO {
-    Calendar create(Calendar newCalendar);
+    Calendar save(Calendar newCalendar);
     Calendar read(long id);
     List<Calendar> readAll();
 }

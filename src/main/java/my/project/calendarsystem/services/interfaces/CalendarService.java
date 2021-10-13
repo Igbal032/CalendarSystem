@@ -9,5 +9,6 @@ public interface CalendarService {
     CalendarDTO create(CalendarDTO newCalendar);
     CalendarDTO read(long id);
     List<CalendarDTO> readAll();
+    CalendarDTO update(long calendarId, CalendarDTO updatedCalendar);
     void delete(long id);
 }

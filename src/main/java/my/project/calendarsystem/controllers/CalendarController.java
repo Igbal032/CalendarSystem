@@ -39,10 +39,15 @@ public class CalendarController {
         return new ResponseEntity(calendarService.readAll(),HttpStatus.OK);
     }
 
-    @PutMapping
-    public ResponseEntity update(@RequestBody CalendarDTO calendarDTO){
-
-        return new ResponseEntity(HttpStatus.OK);
+    /**
+     * This method is used for updating one calendar
+     * @PathVariable  calendar-id
+     * @RequestBody calendarDTO
+     * @return
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity update(@PathVariable long id,@RequestBody CalendarDTO calendarDTO){
+        return new ResponseEntity(calendarService.update(id,calendarDTO),HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")

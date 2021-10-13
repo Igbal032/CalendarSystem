@@ -38,7 +38,7 @@ public class CalendarServiceImp implements CalendarService {
             Color timeColor = Helper.getColorBasedOnDay(range);
             LocalDateTime notifiedDate = calendar.getFromDate().minusDays(calendar.getBeNotified());
             calendar = calendar.toBuilder().timeColor(timeColor.toString()).notifiedDate(notifiedDate).build();
-            Calendar saved = calendarDAO.create(calendar);
+            Calendar saved = calendarDAO.save(calendar);
             CalendarDTO convertToDto = modelMapper.map(saved, CalendarDTO.class);
             return convertToDto;
         }
@@ -49,7 +49,7 @@ public class CalendarServiceImp implements CalendarService {
     public CalendarDTO read(long id) {
         if (id!=0){
             Calendar calendar =  calendarDAO.read(id);
-            if (calendar==null) throw new CalendarNotFoundException("Calendar not found.");
+            if (calendar==null) throw new CalendarNotFoundException("Calendar not found with this id.");
             return modelMapper.map(calendar,CalendarDTO.class);
         }
         log.error("id must not be 0");
@@ -60,7 +60,30 @@ public class CalendarServiceImp implements CalendarService {
     public List<CalendarDTO> readAll() {
         List<Calendar> calendarList = calendarDAO.readAll();
         if (calendarList.size()==0) throw new CalendarNotFoundException("There are no any calendars!");
+        log.info("All Calendars..");
         return Arrays.asList(modelMapper.map(calendarList,CalendarDTO[].class));
+    }
+
+    @Override
+    public CalendarDTO update(long calendarId,CalendarDTO updatedCalendar) {
+        if (calendarId==0) throw new NotZeroException("Id must not be 0");
+        Calendar findCalendar = calendarDAO.read(calendarId);
+        if (Helper.checkDate(updatedCalendar.getFromDate(),updatedCalendar.getToDate())){
+            Calendar calendar = modelMapper.map(updatedCalendar, Calendar.class);
+            long range = Helper.calRangeBetweenTwoLocalDateTime(calendar.getFromDate(),LocalDateTime.now());
+            Color timeColor = Helper.getColorBasedOnDay(range);
+            LocalDateTime notifiedDate = calendar.getFromDate().minusDays(calendar.getBeNotified());
+            calendar = calendar.toBuilder()
+                    .ID(findCalendar.getID())
+                    .createdDate(findCalendar.getCreatedDate())
+                    .timeColor(timeColor.toString())
+                    .notifiedDate(notifiedDate)
+                    .build();
+            Calendar saved = calendarDAO.save(calendar);
+            CalendarDTO convertToDto = modelMapper.map(saved, CalendarDTO.class);
+            return convertToDto;
+        }
+        throw new NotCorrectDateException("Wrong DateTime");
     }
 
     @Override
