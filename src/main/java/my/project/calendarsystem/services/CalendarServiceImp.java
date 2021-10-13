@@ -141,9 +141,11 @@ public class CalendarServiceImp implements CalendarService {
         });
     }
 
-    @Scheduled(fixedRate = 1000)
+    /*
+    * every one hour it works
+    * */
+    @Scheduled(fixedRate = 1000*60*59)
     private void setColorTime(){
-        System.out.println("Working");
         calendarDAO.readAll().stream()
                 .filter(w->w.getDeletedDate()==null)
                 .forEach(c->{
