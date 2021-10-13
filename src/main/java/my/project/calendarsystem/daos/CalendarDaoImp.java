@@ -2,10 +2,12 @@ package my.project.calendarsystem.daos;
 
 import lombok.RequiredArgsConstructor;
 import my.project.calendarsystem.daos.interfaces.CalendarDAO;
+import my.project.calendarsystem.exceptions.CalendarNotFoundException;
 import my.project.calendarsystem.models.Calendar;
 import my.project.calendarsystem.repos.CalendarRepo;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,6 +34,9 @@ public class CalendarDaoImp implements CalendarDAO {
 
     @Override
     public void delete(long id) {
-        calendarRepo.deleteById(id);
+        Calendar calendar = read(id);
+        if (calendar==null) throw new CalendarNotFoundException("Calendar not found");
+        calendar.setDeletedDate(LocalDateTime.now());
+        calendarRepo.save(calendar);
     }
 }

@@ -3,30 +3,27 @@ package my.project.calendarsystem.services;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import my.project.calendarsystem.daos.interfaces.CalendarDAO;
-import my.project.calendarsystem.daos.interfaces.CalendarForUsersDao;
 import my.project.calendarsystem.daos.interfaces.UserDAO;
 import my.project.calendarsystem.dtos.CalendarDTO;
+import my.project.calendarsystem.dtos.RangeDTO;
 import my.project.calendarsystem.enums.Color;
 import my.project.calendarsystem.exceptions.CalendarNotFoundException;
 import my.project.calendarsystem.exceptions.NotAccessException;
 import my.project.calendarsystem.exceptions.NotCorrectDateException;
 import my.project.calendarsystem.exceptions.NotZeroException;
 import my.project.calendarsystem.models.Calendar;
-import my.project.calendarsystem.models.CalendarForUser;
 import my.project.calendarsystem.models.User;
 import my.project.calendarsystem.services.interfaces.CalendarForUsersService;
 import my.project.calendarsystem.services.interfaces.CalendarService;
-import my.project.calendarsystem.services.interfaces.UserService;
 import my.project.calendarsystem.utils.Helper;
-import net.bytebuddy.description.method.MethodDescription;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -67,10 +64,9 @@ public class CalendarServiceImp implements CalendarService {
     @Override
     public CalendarDTO read(long id, User user) {
         if (id!=0){
-
             Calendar calendar =  calendarDAO.read(id);
-            calendarForUsersService.read(calendar,user);
-            if (calendar==null) throw new CalendarNotFoundException("Calendar not found with this id.");
+            if (calendar==null||calendar.getDeletedDate()!=null) throw new CalendarNotFoundException("Calendar not found with this id.");
+            calendarForUsersService.getCalForUser(calendar,user);
             return modelMapper.map(calendar,CalendarDTO.class);
         }
         log.error("id must not be 0");
@@ -86,11 +82,29 @@ public class CalendarServiceImp implements CalendarService {
     }
 
     @Override
+    public List<CalendarDTO> getCalendarsBetweenTwoDay(RangeDTO rangeDTO) {
+        List<Calendar>  calendarList = calendarDAO.readAll();
+        if (calendarList.size()==0) throw new CalendarNotFoundException("There are no any calendars!!");
+        calendarList = calendarList.stream()
+                .filter(w->rangeDTO.getFromT()
+                        .isBefore(w.getFromDate())
+                        &&rangeDTO.getToT()
+                        .isAfter(w.getToDate()))
+                .collect(Collectors.toList());
+        return Arrays.asList(modelMapper.map(calendarList,CalendarDTO[].class));
+    }
+
+    @Override
     public CalendarDTO update(long Id, CalendarDTO updatedCalendar, User user) {
         if (Id==0) throw new NotZeroException("Id must not be 0");
         Calendar findCalendar = calendarDAO.read(Id);
-        if (user.getRole().equals(adminRole)==findCalendar.getUser().getRole().equals(adminRole)
-                ||user.getEmail()==findCalendar.getUser().getEmail()){
+        System.out.println(findCalendar.getUser().getRole());
+        System.out.println(findCalendar.getUser().getEmail());
+        System.out.println(user.getEmail());
+        System.out.println(user.getRole().equals(adminRole));
+        System.out.println(findCalendar.getUser().getRole().equals(adminRole));
+        if (user.getEmail().equals(findCalendar.getUser().getEmail())
+                || user.getRole().equals(adminRole)==true&&findCalendar.getUser().getRole().equals(adminRole)==true){
             if (Helper.checkDate(updatedCalendar.getFromDate(), updatedCalendar.getToDate())) {
                 Calendar calendar = modelMapper.map(updatedCalendar, Calendar.class);
                 long range = Helper.calRangeBetweenTwoLocalDateTime(calendar.getFromDate(), LocalDateTime.now());
@@ -114,11 +128,14 @@ public class CalendarServiceImp implements CalendarService {
 
     @Override
     public void delete(long id,User user) {
-    if (id==0) throw new NotZeroException("Id must not be 0");
-    Calendar findCalendar = calendarDAO.read(id);
-    if (!(user.getRole().equals(adminRole)&&user.getRole().equals(adminRole))
-            ||(user.getId()!=findCalendar.getUser().getId())) throw new NotAccessException("Only creator update this event");
-    calendarDAO.delete(id);
+        if (id == 0) throw new NotZeroException("Id must not be 0");
+        Calendar findCalendar = calendarDAO.read(id);
+        if (user.getEmail().equals(findCalendar.getUser().getEmail())
+                || user.getRole().equals(adminRole)==true&&findCalendar.getUser().getRole().equals(adminRole)==true){
+            calendarDAO.delete(id);
+            return;
+        }
+        throw new NotAccessException("Only creator delete this event");
     }
 
     private void createCalendarForAll(Calendar calendar){

@@ -3,15 +3,15 @@ package my.project.calendarsystem.controllers;
 import lombok.RequiredArgsConstructor;
 import my.project.calendarsystem.config.JwtTokenUtil;
 import my.project.calendarsystem.dtos.CalendarDTO;
+import my.project.calendarsystem.dtos.RangeDTO;
 import my.project.calendarsystem.models.User;
 import my.project.calendarsystem.services.interfaces.CalendarService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
 
 @RestController
 @RequiredArgsConstructor
@@ -68,5 +68,15 @@ public class CalendarController {
         User user = jwtTokenUtil.getUserId(request.getHeader("Authorization"));
         calendarService.delete(id,user);
         return new ResponseEntity(HttpStatus.OK);
+    }
+    /**
+     * This method is used for getting calendar between two DATE
+     * @RequestParam fromT
+     * @RequestParam toT
+     * @return
+     */
+    @GetMapping("/range")
+    public ResponseEntity calendarsBasedOnDate(@RequestBody RangeDTO rangeDTO){
+        return new ResponseEntity(calendarService.getCalendarsBetweenTwoDay(rangeDTO),HttpStatus.OK);
     }
 }

@@ -6,5 +6,5 @@ import my.project.calendarsystem.models.User;
 
 public interface CalendarForUsersService {
     CalendarForUser create(Calendar calendar, User user);
-    CalendarForUser read(Calendar calendar, User user);
+    CalendarForUser getCalForUser(Calendar calendar, User user);
 }

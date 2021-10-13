@@ -21,7 +21,6 @@ public class CalendarForUsersDaoImp implements CalendarForUsersDao {
         calForUser.setUser(user);
         calForUser.setRead(false);
         calendarForUserRepo.save(calForUser);
-        System.out.println("TEST");
         return calForUser;
     }
 
